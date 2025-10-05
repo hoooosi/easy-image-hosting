@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.hoooosi.imagehosting.mapper.ImageIndexMapper">
+    <resultMap id="imageVO" type="io.github.hoooosi.imagehosting.vo.ImageVO">
+        <result property="items" column="items"
+                typeHandler="io.github.hoooosi.imagehosting.type.handler.JsonbTypeHandler"/>
+    </resultMap>
+
+    <select id="query" resultMap="imageVO">
+        SELECT
+        idx.space_id,
+        idx.user_id,
+        idx.name,
+        idx.introduction,
+        idx.tags,
+        idx.create_time,
+        idx.update_time,
+        u.name AS creator_name,
+        u.avatar AS creator_avatar,
+        COALESCE(
+        jsonb_agg(to_jsonb(it) ORDER BY it.id) FILTER (WHERE it.id IS NOT NULL),
+        '[]'::jsonb ) AS items
+        <if test="mask != null and mask != 0">
+            ,s.public_permission_mask AS mask
+        </if>
+        FROM "tb_image_index" idx
+        LEFT JOIN "tb_user" u ON idx.user_id = u.id
+        LEFT JOIN tb_image_item AS it ON idx.id = it.idx_id
+        <if test="mask != null and mask != 0">
+            LEFT JOIN "tb_space" s ON idx.space_id = s.id
+        </if>
+        <where>
+            <if test="ew != null and ew.sqlSegment != null and ew.sqlSegment != ''">${ew.sqlSegment}</if>
+        </where>
+        GROUP BY idx.id, u.id
+    </select>
+
+    <select id="getAllowImgIds" resultType="java.lang.Long">
+        SELECT idx.id
+        FROM tb_image_index AS idx
+        LEFT JOIN tb_space AS s ON idx.space_id = s.id
+        LEFT JOIN tb_member AS m ON idx.space_id = m.space_id AND m.user_id = #{userId}
+        WHERE
+        idx.id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">#{id}</foreach>
+        AND ( idx.user_id = #{userId} OR ((m.permission_mask &amp; 16777216) = 16777216 )
+    </select>
+
+    <select id="deleteAndSumSize" resultType="long">
+        WITH deleted_items_size AS (
+        SELECT COALESCE(SUM(tii.size), 0) AS total_deleted_size
+        FROM tb_image_item tii
+        WHERE tii.idx_id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">#{id}</foreach>
+        ),
+        delete_index AS (
+        DELETE FROM tb_image_index
+        WHERE id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">#{id}</foreach>
+        RETURNING id )
+        SELECT total_deleted_size FROM deleted_items_size
+    </select>
+
+    <select id="getFirstFileByIdxId" resultType="io.github.hoooosi.imagehosting.entity.ImageFile">
+        SELECT f.*
+        FROM "tb_image_file" f
+                 JOIN "tb_image_item" i ON f.id = i.file_id
+        WHERE i.id = (SELECT first_item_id
+                      FROM "tb_image_index"
+                      WHERE id = #{idxId})
+    </select>
+</mapper>

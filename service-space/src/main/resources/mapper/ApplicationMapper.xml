@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.hoooosi.imagehosting.mapper.ApplicationMapper">
+    <sql id="select">
+        WITH "tb" as (SELECT ma.id,
+                             ma.type,
+                             ma.user_id,
+                             ma.space_id,
+                             ma.status,
+                             ma.handle_type,
+                             ma.create_time,
+                             ma.update_time,
+                             ma.handle_time,
+                             s.name   as space_name,
+                             u.name   as user_name,
+                             u.avatar as user_avatar
+                      FROM "tb_application" ma
+                               LEFT JOIN "tb_space" s ON ma.space_id = s.id
+                               LEFT JOIN "tb_user" u ON ma.user_id = u.id)
+        SELECT *
+        FROM "tb"
+    </sql>
+
+    <select id="query" resultType="io.github.hoooosi.imagehosting.vo.ApplicationVO">
+        <include refid="select"/>
+        <where>
+            <if test="ew != null and ew.sqlSegment != null and ew.sqlSegment != ''">
+                ${ew.sqlSegment}
+            </if>
+        </where>
+    </select>
+</mapper>

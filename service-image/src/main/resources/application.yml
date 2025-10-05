@@ -1,0 +1,50 @@
+server:
+  port: 15020
+#=======================================================================================================================
+spring:
+  application:
+    name: image-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.31.3:8848
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://192.168.31.3:5432/simple_picture?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: postgres
+    password: 123456
+  servlet:
+    multipart:
+      max-file-size: 10MB
+  data:
+    redis:
+      database: 0
+      host: 192.168.31.3
+      port: 6379
+      timeout: 5000
+      password: redis
+#=======================================================================================================================
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+#=======================================================================================================================
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'image-group'
+      paths-to-match: '/**'
+      packages-to-scan: 'io.github.hoooosi.imagehosting.controller'
+#=======================================================================================================================
+minio:
+  endpoint: http://192.168.31.3:9000
+  access-key: minio
+  secret-key: 12345678
+  bucket-name: picture
+#=======================================================================================================================
+rocketmq:
+  name-server: 192.168.31.3:9876
+  producer:
+    group: imagehosting-producer-group
+    send-message-timeout: 3000
+    retry-times-when-send-failed: 2
