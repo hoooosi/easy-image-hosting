@@ -5,7 +5,6 @@
     <groupId>io.github.hoooosi.imagehosting</groupId>
     <artifactId>service-other</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.1-SNAPSHOT</version>
 
     <parent>
         <groupId>io.github.hoooosi</groupId>
@@ -27,6 +26,10 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>io.github.hoooosi</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
         <!-- Thumbnail -->
         <dependency>
             <groupId>org.imgscalr</groupId>
@@ -47,11 +50,6 @@
             <groupId>org.apache.rocketmq</groupId>
             <artifactId>rocketmq-spring-boot-starter</artifactId>
             <version>2.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.hoooosi</groupId>
-            <artifactId>common</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>

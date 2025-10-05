@@ -61,6 +61,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Common 模块 -->
+            <dependency>
+                <groupId>io.github.hoooosi</groupId>
+                <artifactId>common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <!-- Spring Boot 依赖管理 -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>

@@ -14,8 +14,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAspectJAutoProxy(exposeProxy = true)
 @EnableDiscoveryClient
 @MapperScan("io.github.hoooosi.imagehosting.mapper")
-public class SpaceApplication {
+public class CompositeApplication {
     public static void main(String[] args) {
-        SpringApplication.run(SpaceApplication.class, args);
+        SpringApplication.run(CompositeApplication.class, args);
     }
 }
