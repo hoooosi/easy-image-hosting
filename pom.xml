@@ -10,7 +10,7 @@
         <module>common</module>
         <module>gateway</module>
         <module>service-user</module>
-        <module>service-space</module>
+        <module>service-composite</module>
         <module>service-image</module>
         <module>service-other</module>
     </modules>

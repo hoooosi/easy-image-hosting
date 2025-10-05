@@ -7,7 +7,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
     <groupId>io.github.hoooosi.imagehosting</groupId>
-    <artifactId>service-space</artifactId>
+    <artifactId>service-composite</artifactId>
     <packaging>jar</packaging>
 
     <build>

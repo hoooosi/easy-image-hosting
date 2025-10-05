@@ -3,7 +3,7 @@ server:
 #=======================================================================================================================
 spring:
   application:
-    name: space-service
+    name: composite-service
   cloud:
     nacos:
       discovery:
@@ -30,7 +30,7 @@ springdoc:
   api-docs:
     path: /v3/api-docs
   group-configs:
-    - group: 'space-group'
+    - group: 'composite-group'
       paths-to-match: '/**'
       packages-to-scan: 'io.github.hoooosi.imagehosting.user.controller'
 #=======================================================================================================================
