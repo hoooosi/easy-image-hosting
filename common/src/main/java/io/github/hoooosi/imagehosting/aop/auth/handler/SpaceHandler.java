@@ -29,7 +29,7 @@ public class SpaceHandler extends AbstractHandler {
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.MASK_SPACE, key = "#spaceId+':'+T(io.github.hoooosi.imagehosting.utils.SessionUtils).userId()")
+    @Cacheable(cacheNames = CacheNames.MASK_SPACE, key = "#spaceId+':'+T(io.github.hoooosi.imagehosting.utils.SessionUtils).getUserId()")
     public Long handlePermission(Long spaceId) {
         // If the user is logged in, check whether he is a member of the space
         if (SessionUtils.isLogged()) {

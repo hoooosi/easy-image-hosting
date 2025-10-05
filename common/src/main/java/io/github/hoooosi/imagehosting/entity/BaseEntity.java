@@ -15,8 +15,8 @@ public abstract class BaseEntity implements Serializable {
     private Long id;
 
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
+    private Long createTime;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
+    private Long updateTime;
 }

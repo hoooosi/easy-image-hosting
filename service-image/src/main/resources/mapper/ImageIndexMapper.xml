@@ -2,37 +2,104 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="io.github.hoooosi.imagehosting.mapper.ImageIndexMapper">
     <resultMap id="imageVO" type="io.github.hoooosi.imagehosting.vo.ImageVO">
+        <result property="tags" column="tags"
+                typeHandler="io.github.hoooosi.imagehosting.type.handler.JsonbTypeHandler"/>
         <result property="items" column="items"
                 typeHandler="io.github.hoooosi.imagehosting.type.handler.JsonbTypeHandler"/>
     </resultMap>
 
-    <select id="query" resultMap="imageVO">
-        SELECT
-        idx.space_id,
-        idx.user_id,
-        idx.name,
-        idx.introduction,
-        idx.tags,
-        idx.create_time,
-        idx.update_time,
-        u.name AS creator_name,
-        u.avatar AS creator_avatar,
-        COALESCE(
-        jsonb_agg(to_jsonb(it) ORDER BY it.id) FILTER (WHERE it.id IS NOT NULL),
-        '[]'::jsonb ) AS items
-        <if test="mask != null and mask != 0">
-            ,s.public_permission_mask AS mask
+    <!--suppress SqlNoDataSourceInspection, SqlResolve -->
+    <sql id="selectImageVO">
+        SELECT idx.id,
+               idx.space_id,
+               idx.user_id,
+               idx.first_item_id,
+               idx.name,
+               idx.introduction,
+               idx.tags,
+               idx.create_time,
+               idx.update_time,
+               u.name                          AS creator_name,
+               u.avatar                        AS creator_avatar,
+               COALESCE(ai.items, '[]'::jsonb) AS items
+    </sql>
+
+    <!--suppress SqlNoDataSourceInspection, SqlResolve -->
+    <sql id="selectItem">
+        SELECT it.idx_id,
+               jsonb_agg(jsonb_build_object(
+                                 'id', it.id,
+                                 'spaceId', it.space_id,
+                                 'idxId', it.idx_id,
+                                 'fileId', it.file_id,
+                                 'status', it.status,
+                                 'md5', it.md5,
+                                 'contentType', it.content_type,
+                                 'size', it.size,
+                                 'width', it.width,
+                                 'height', it.height,
+                                 'createTime', it.create_time,
+                                 'updateTime', it.update_time
+                         ) ORDER BY it.id) AS items
+    </sql>
+
+    <sql id="filterImageVO">
+        <if test="params != null and params.userId != null">
+            AND idx.user_id = #{params.userId}
         </if>
-        FROM "tb_image_index" idx
-        LEFT JOIN "tb_user" u ON idx.user_id = u.id
-        LEFT JOIN tb_image_item AS it ON idx.id = it.idx_id
-        <if test="mask != null and mask != 0">
-            LEFT JOIN "tb_space" s ON idx.space_id = s.id
+        <if test="params != null and params.spaceId != null">
+            AND idx.space_id = #{params.spaceId}
         </if>
+        <if test="params != null and params.name != null and params.name != ''">
+            AND idx.name ILIKE CONCAT('%', #{params.name}, '%')
+        </if>
+        <if test="params != null and params.introduction != null and params.introduction != ''">
+            AND idx.introduction ILIKE CONCAT('%', #{params.introduction}, '%')
+        </if>
+        <if test="params != null and params.tags != null and params.tags.size() > 0">
+            <foreach collection="params.tags" item="tag" open="AND (" separator=" OR " close=")">
+                idx.tags @> jsonb_build_array(#{tag})
+            </foreach>
+        </if>
+    </sql>
+
+
+    <select id="queryPublic" resultMap="imageVO">
+        WITH all_items AS (
+        <include refid="selectItem"/>
+        FROM tb_image_item it
+        WHERE it.status = 'SUCCESS'
+        GROUP BY it.idx_id )
+        <include refid="selectImageVO"/>
+        FROM tb_image_index idx
+        INNER JOIN tb_space s ON idx.space_id = s.id
+        LEFT JOIN tb_user u ON idx.user_id = u.id
+        LEFT JOIN all_items ai ON ai.idx_id = idx.id
         <where>
-            <if test="ew != null and ew.sqlSegment != null and ew.sqlSegment != ''">${ew.sqlSegment}</if>
+            s.public_permission_mask &amp; 2097152 = 2097152
+            <include refid="filterImageVO"/>
         </where>
-        GROUP BY idx.id, u.id
+    </select>
+
+    <select id="queryAll" resultMap="imageVO">
+        WITH all_items AS (
+        <include refid="selectItem"/>
+        FROM tb_image_item it
+        GROUP BY it.idx_id)
+        <include refid="selectImageVO"/>
+        FROM tb_image_index idx
+        LEFT JOIN tb_user u ON idx.user_id = u.id
+        LEFT JOIN all_items ai ON ai.idx_id = idx.id
+        <where>
+            true
+            <include refid="filterImageVO"/>
+            <if test="req != null and req.userId != null">
+                AND idx.user_id = #{req.userId}
+            </if>
+            <if test="req != null and req.spaceId != null">
+                AND idx.space_id = #{req.spaceId}
+            </if>
+        </where>
     </select>
 
     <select id="getAllowImgIds" resultType="java.lang.Long">
@@ -69,4 +136,5 @@
                       FROM "tb_image_index"
                       WHERE id = #{idxId})
     </select>
+
 </mapper>

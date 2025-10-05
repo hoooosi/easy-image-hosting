@@ -1,11 +1,12 @@
 package io.github.hoooosi.imagehosting.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.hoooosi.imagehosting.constant.CacheNames;
+import io.github.hoooosi.imagehosting.dto.PageReq;
+import io.github.hoooosi.imagehosting.dto.QueryImageVOParams;
 import io.github.hoooosi.imagehosting.entity.ImageFile;
 import io.github.hoooosi.imagehosting.entity.ImageIndex;
 import io.github.hoooosi.imagehosting.entity.ImageItem;
@@ -18,7 +19,6 @@ import io.github.hoooosi.imagehosting.utils.ImageUtils;
 import io.github.hoooosi.imagehosting.utils.PageUtils;
 import io.github.hoooosi.imagehosting.utils.SessionUtils;
 import io.github.hoooosi.imagehosting.utils.ThrowUtils;
-import io.github.hoooosi.imagehosting.dto.QueryImgReq;
 import io.github.hoooosi.imagehosting.manager.MinioManager;
 import io.github.hoooosi.imagehosting.manager.ImageManager;
 import io.github.hoooosi.imagehosting.mapper.ImageIndexMapper;
@@ -49,16 +49,13 @@ public class ImageServiceImpl extends ServiceImpl<ImageIndexMapper, ImageIndex> 
     private final SpaceBaseMapper spaceBaseMapper;
 
     @Override
-    public Page<ImageVO> query(QueryImgReq req, LambdaQueryWrapper<ImageVO> wrapper, boolean mask) {
-        String tagsJsonArray = null;
-        if (req.getTags() != null && !req.getTags().isEmpty())
-            tagsJsonArray = "['" + String.join("','", req.getTags()) + "']";
+    public Page<ImageVO> pagePublic(PageReq req, QueryImageVOParams params) {
+        return baseMapper.queryPublic(PageUtils.of(req), params);
+    }
 
-        wrapper.like(req.getName() != null, ImageVO::getName, req.getName())
-                .like(req.getIntroduction() != null, ImageVO::getIntroduction, req.getIntroduction())
-                .apply(tagsJsonArray != null, "tags @> {0}::jsonb", tagsJsonArray)
-                .orderBy(true, req.isAsc(), ImageVO::getId);
-        return baseMapper.query(PageUtils.of(req), wrapper, mask);
+    @Override
+    public Page<ImageVO> pageAll(PageReq req, QueryImageVOParams params) {
+        return baseMapper.queryAll(PageUtils.of(req), params);
     }
 
     @Override

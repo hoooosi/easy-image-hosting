@@ -3,10 +3,10 @@ package io.github.hoooosi.imagehosting.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import io.github.hoooosi.imagehosting.dto.PageReq;
+import io.github.hoooosi.imagehosting.dto.QueryImageVOParams;
 import io.github.hoooosi.imagehosting.entity.ImageIndex;
-import io.github.hoooosi.imagehosting.dto.QueryImgReq;
 import io.github.hoooosi.imagehosting.vo.ImageVO;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -17,10 +17,9 @@ import java.util.List;
 public interface ImageService extends IService<ImageIndex> {
 
 
-    /**
-     * Query image vo page
-     */
-    Page<ImageVO> query(QueryImgReq req, LambdaQueryWrapper<ImageVO> wrapper, boolean mask);
+    Page<ImageVO> pagePublic(PageReq req, QueryImageVOParams params);
+
+    Page<ImageVO> pageAll(PageReq req, QueryImageVOParams params);
 
     /**
      * Upload image

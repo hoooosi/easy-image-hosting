@@ -15,8 +15,8 @@ public class UserInfoVO {
     private String avatar;
     private String profile;
     private User.Role role;
-    private LocalDateTime createTime;
-    private LocalDateTime updateTime;
+    private Long createTime;
+    private Long updateTime;
 
     public UserInfoVO(User user) {
         this.account = user.getAccount();

@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
 import org.postgresql.util.PGobject;
-
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -24,11 +23,9 @@ public class JsonbTypeHandler extends JacksonTypeHandler {
 
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, JdbcType jdbcType) throws SQLException {
-        if (ps != null) {
-            PGobject jsonObject = new PGobject();
-            jsonObject.setType("jsonb");
-            jsonObject.setValue(toJson(parameter));
-            ps.setObject(i, jsonObject);
-        }
+        PGobject jsonObject = new PGobject();
+        jsonObject.setType("jsonb");
+        jsonObject.setValue(toJson(parameter));
+        ps.setObject(i, jsonObject);
     }
 }

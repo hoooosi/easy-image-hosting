@@ -11,8 +11,8 @@ CREATE TABLE "tb_user"
     avatar      VARCHAR(1024)       NULL,
     profile     VARCHAR(512)        NULL,
     role        VARCHAR(20) DEFAULT 'USER' CHECK (role IN ('ADMIN', 'USER')),
-    create_time TIMESTAMP,
-    update_time TIMESTAMP
+    create_time BIGINT,
+    update_time BIGINT
 );
 
 CREATE TABLE "tb_space"
@@ -23,8 +23,8 @@ CREATE TABLE "tb_space"
     total_size             BIGINT DEFAULT 0,
     public_permission_mask BIGINT DEFAULT 0,
     member_permission_mask BIGINT DEFAULT 0,
-    create_time            TIMESTAMP,
-    update_time            TIMESTAMP,
+    create_time            BIGINT,
+    update_time            BIGINT,
     CONSTRAINT check_total_size_lt_max_size CHECK (total_size <= max_size)
 );
 
@@ -34,8 +34,8 @@ CREATE TABLE "tb_member"
     space_id        BIGINT NOT NULL,
     user_id         BIGINT NOT NULL,
     permission_mask BIGINT DEFAULT 0,
-    create_time     TIMESTAMP,
-    update_time     TIMESTAMP,
+    create_time     BIGINT,
+    update_time     BIGINT,
     FOREIGN KEY (space_id) REFERENCES tb_space (id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES tb_user (id) ON DELETE CASCADE,
     UNIQUE (space_id, user_id)
@@ -50,8 +50,8 @@ CREATE TABLE "tb_image_index"
     name          VARCHAR(128) NOT NULL,
     introduction  VARCHAR(512) DEFAULT '',
     tags          JSONB        DEFAULT '[]',
-    create_time   TIMESTAMP,
-    update_time   TIMESTAMP,
+    create_time   BIGINT,
+    update_time   BIGINT,
     FOREIGN KEY (space_id) REFERENCES tb_space (id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES tb_user (id) ON DELETE CASCADE
 );
@@ -64,8 +64,8 @@ CREATE TABLE "tb_image_file"
     size         BIGINT             NOT NULL,
     width        INT                NOT NULL,
     height       INT                NOT NULL,
-    create_time  TIMESTAMP,
-    update_time  TIMESTAMP
+    create_time  BIGINT,
+    update_time  BIGINT
 );
 
 CREATE TABLE "tb_image_item"
@@ -75,13 +75,13 @@ CREATE TABLE "tb_image_item"
     idx_id       BIGINT      NOT NULL,
     file_id      BIGINT,
     status       VARCHAR(20) CHECK (status IN ('PROCESSING', 'SUCCESS', 'FAILED')),
-    md5          VARCHAR(32) UNIQUE NOT NULL,
-    content_type VARCHAR(32)        NOT NULL,
-    size         BIGINT             NOT NULL,
-    width        INT                NOT NULL,
-    height       INT                NOT NULL,
-    create_time  TIMESTAMP,
-    update_time  TIMESTAMP,
+    md5          VARCHAR(32),
+    content_type VARCHAR(32) NOT NULL,
+    size         BIGINT,
+    width        INT,
+    height       INT,
+    create_time  BIGINT,
+    update_time  BIGINT,
     FOREIGN KEY (space_id) REFERENCES tb_space (id) ON DELETE CASCADE,
     FOREIGN KEY (idx_id) REFERENCES tb_image_index (id) ON DELETE CASCADE,
     FOREIGN KEY (file_id) REFERENCES tb_image_file (id) ON DELETE CASCADE
