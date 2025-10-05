@@ -34,7 +34,7 @@ public class AuthAspect {
         Long id = this.getId(joinPoint, authPermission);
         long target = authPermission.mask();
         Long mask = handlerRouter.handle(id,authPermission.id());
-        ThrowUtils.throwIf((mask & target) != target, ErrorCode.NO_AUTH);
+        ThrowUtils.throwIf((mask & target) != target, ErrorCode.NO_PERMISSION);
     }
 
     @Before("@annotation(authLogged)")

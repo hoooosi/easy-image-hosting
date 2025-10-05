@@ -13,6 +13,7 @@ public enum ErrorCode {
     PASSWORD_ERROR(40003, "Password Error"),
     NOT_LOGGED(40100, "Not Logged"),
     NO_AUTH(40101, "No Auth"),
+    NO_PERMISSION(40102, "No Permission"),
     APPLICATION_EXISTS(400003, "Application already exists"),
     ILLEGAL_OPERATION(40004, "Illegal operation"),
     UNABLE_TO_OPERATE_MYSELF(40005, "Unable to operate myself"),

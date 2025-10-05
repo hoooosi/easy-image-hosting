@@ -9,9 +9,11 @@ import io.github.hoooosi.imagehosting.mapper.ImageItemBaseMapper;
 import io.github.hoooosi.imagehosting.utils.ThrowUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @AllArgsConstructor
 public class ImageItemHandler extends AbstractHandler {
@@ -29,7 +31,7 @@ public class ImageItemHandler extends AbstractHandler {
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.MASK_IMAGE_ITEM, key = "#itemId+':'+T(io.github.hoooosi.imagehosting.utils.SessionUtils).userId()")
+    @Cacheable(cacheNames = CacheNames.MASK_IMAGE_ITEM, key = "#itemId+':'+T(io.github.hoooosi.imagehosting.utils.SessionUtils).getUserId()")
     public Long handlePermission(Long itemId) {
         ImageItem imageItem = imageItemBaseMapper.selectById(itemId);
         ThrowUtils.throwIfNull(imageItem, ErrorCode.NOT_FOUND);

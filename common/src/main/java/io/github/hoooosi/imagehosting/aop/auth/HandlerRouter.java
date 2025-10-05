@@ -1,13 +1,10 @@
 package io.github.hoooosi.imagehosting.aop.auth;
 
 
+import io.github.hoooosi.imagehosting.aop.auth.common.AbstractHandler;
 import io.github.hoooosi.imagehosting.aop.auth.common.Handler;
 import io.github.hoooosi.imagehosting.aop.auth.common.ID;
-import io.github.hoooosi.imagehosting.aop.auth.handler.ApplicationHandler;
-import io.github.hoooosi.imagehosting.aop.auth.handler.ImageIndexHandler;
-import io.github.hoooosi.imagehosting.aop.auth.handler.MemberHandler;
-import io.github.hoooosi.imagehosting.aop.auth.handler.SpaceHandler;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,15 +14,8 @@ import java.util.List;
  */
 @Component
 public class HandlerRouter {
-    private final List<Handler> HANDLERS;
-
-    @Autowired
-    public HandlerRouter(MemberHandler memberHandler,
-                         ApplicationHandler applyHandler,
-                         ImageIndexHandler imageIndexHandler,
-                         SpaceHandler spaceHandler) {
-        HANDLERS = List.of(memberHandler, applyHandler, spaceHandler, imageIndexHandler);
-    }
+    @Resource
+    private List<AbstractHandler> HANDLERS;
 
     public Long handle(Long id, ID idType) {
         for (Handler handler : HANDLERS) {

@@ -136,5 +136,4 @@
                       FROM "tb_image_index"
                       WHERE id = #{idxId})
     </select>
-
 </mapper>

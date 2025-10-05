@@ -12,7 +12,6 @@ public class SessionUtils {
         if (!isLogged())
             return null;
         Object userObj = StpUtil.getSession().get(UserToken.class.getName());
-        log.info("getUserToken:{}", userObj);
         return (UserToken) userObj;
     }
 

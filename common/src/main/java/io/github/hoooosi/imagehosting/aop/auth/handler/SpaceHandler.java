@@ -47,6 +47,7 @@ public class SpaceHandler extends AbstractHandler {
         // The operator is not logged in, try to return the space public permission mask
         Space entity = spaceBaseMapper.selectById(spaceId);
         ThrowUtils.throwIfNull(entity, ErrorCode.NOT_FOUND);
+        log.info("Space public permission mask: {}", entity.getPublicPermissionMask());
         return entity.getPublicPermissionMask();
     }
 }
