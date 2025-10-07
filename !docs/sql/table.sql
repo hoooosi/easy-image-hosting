@@ -76,7 +76,7 @@ CREATE TABLE "tb_image_item"
     file_id      BIGINT,
     status       VARCHAR(20) CHECK (status IN ('PROCESSING', 'SUCCESS', 'FAILED')),
     md5          VARCHAR(32),
-    content_type VARCHAR(32) NOT NULL,
+    content_type VARCHAR(32),
     size         BIGINT,
     width        INT,
     height       INT,

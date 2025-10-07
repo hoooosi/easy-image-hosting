@@ -1,17 +1,24 @@
 package io.github.hoooosi.imagehosting.controller;
 
+import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.github.hoooosi.imagehosting.annotation.AuthLogged;
 import io.github.hoooosi.imagehosting.annotation.AuthPermission;
 import io.github.hoooosi.imagehosting.aop.auth.common.ID;
 import io.github.hoooosi.imagehosting.constant.Permission;
 import io.github.hoooosi.imagehosting.dto.BaseRes;
+import io.github.hoooosi.imagehosting.dto.CheckUploadInitReq;
+import io.github.hoooosi.imagehosting.entity.ImageFile;
 import io.github.hoooosi.imagehosting.entity.ImageIndex;
+import io.github.hoooosi.imagehosting.entity.ImageItem;
+import io.github.hoooosi.imagehosting.entity.Space;
 import io.github.hoooosi.imagehosting.exception.ErrorCode;
 import io.github.hoooosi.imagehosting.utils.ImageUtils;
+import io.github.hoooosi.imagehosting.utils.SessionUtils;
 import io.github.hoooosi.imagehosting.utils.ThrowUtils;
 import io.github.hoooosi.imagehosting.dto.EditImgReq;
 import io.github.hoooosi.imagehosting.service.ImageService;
+import io.github.hoooosi.imagehosting.vo.CheckUploadInitVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
@@ -28,16 +35,16 @@ import java.util.List;
 @AllArgsConstructor
 @Tag(name = "Image Opt I/F")
 public class ImageOptController {
+
     private final ImageService imageService;
 
     @PostMapping("/upload/{spaceId}")
-    @Operation(summary = "UPLOAD IMAGE")
+    @Operation(summary = "UPLOAD IMAGE(SIGN)")
     @AuthPermission(mask = Permission.IMAGE_UPLOAD, id = ID.spaceId)
-    public BaseRes<Void> upload(
-            @RequestPart MultipartFile file,
-            @PathVariable Long spaceId) {
-        imageService.upload(file, spaceId);
-        return BaseRes.success();
+    public BaseRes<CheckUploadInitVO> upload(@PathVariable Long spaceId,
+                                             @RequestBody CheckUploadInitReq req) {
+
+        return BaseRes.success(imageService.upload(req, spaceId));
     }
 
     @PutMapping

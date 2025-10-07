@@ -26,9 +26,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.time.ZonedDateTime;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -81,7 +80,7 @@ public class MinioManager {
         }
     }
 
-    private long upload(byte[] bytes, String objectName, String contentType) {
+    public long upload(byte[] bytes, String objectName, String contentType) {
         try (InputStream is = new ByteArrayInputStream(bytes)) {
             minioClient.putObject(
                     PutObjectArgs.builder()
@@ -141,6 +140,18 @@ public class MinioManager {
         }
     }
 
+    public StatObjectResponse stat(String objectName) {
+        try {
+            return minioClient.statObject(
+                    StatObjectArgs.builder()
+                            .bucket(property.getBucketName())
+                            .object(objectName)
+                            .build());
+        } catch (Exception e) {
+            throw new RuntimeException("Stat object failed: " + objectName, e);
+        }
+    }
+
     public String generateTemporaryLink(String objectName) {
         try {
             return minioClient.getPresignedObjectUrl(
@@ -153,5 +164,28 @@ public class MinioManager {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR);
         }
+    }
+
+
+    public PresignedPostForm createPresignedPost(String md5, String contentType, int bytes, int minutes) {
+        try {
+            PostPolicy policy = new PostPolicy(property.getBucketName(), ZonedDateTime.now().plusMinutes(minutes));
+            policy.addEqualsCondition("key", md5);
+            policy.addEqualsCondition("Content-Type", contentType);
+            policy.addContentLengthRangeCondition(bytes, bytes);
+            Map<String, String> minioFormData = minioClient.getPresignedPostFormData(policy);
+            Map<String, String> completeFormData = new HashMap<>();
+            completeFormData.put("key", md5);
+            completeFormData.put("Content-Type", contentType);
+            completeFormData.putAll(minioFormData);
+            String url = property.getEndpoint() + "/" + property.getBucketName();
+            long expireAt = System.currentTimeMillis() + minutes * 60_000L;
+            return new PresignedPostForm(url, completeFormData, md5, expireAt);
+        } catch (Exception e) {
+            throw new RuntimeException("Generate presigned post failed", e);
+        }
+    }
+
+    public record PresignedPostForm(String url, Map<String, String> formData, String objectKey, long expireAt) {
     }
 }

@@ -1,8 +1,10 @@
 package io.github.hoooosi.imagehosting.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
@@ -25,4 +27,5 @@ public class ImageItem extends BaseEntity {
     public enum Status {
         PROCESSING, SUCCESS, FAILED,
     }
+
 }

@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.github.hoooosi.imagehosting.utils.ImageItemUtils;
 import io.github.hoooosi.imagehosting.constant.CacheNames;
+import io.github.hoooosi.imagehosting.dto.CheckUploadInitReq;
 import io.github.hoooosi.imagehosting.dto.PageReq;
 import io.github.hoooosi.imagehosting.dto.QueryImageVOParams;
 import io.github.hoooosi.imagehosting.entity.ImageFile;
@@ -12,6 +14,7 @@ import io.github.hoooosi.imagehosting.entity.ImageIndex;
 import io.github.hoooosi.imagehosting.entity.ImageItem;
 import io.github.hoooosi.imagehosting.entity.Space;
 import io.github.hoooosi.imagehosting.exception.ErrorCode;
+import io.github.hoooosi.imagehosting.manager.SpaceManager;
 import io.github.hoooosi.imagehosting.mapper.ImageFileBaseMapper;
 import io.github.hoooosi.imagehosting.mapper.ImageItemBaseMapper;
 import io.github.hoooosi.imagehosting.mapper.SpaceBaseMapper;
@@ -23,13 +26,13 @@ import io.github.hoooosi.imagehosting.manager.MinioManager;
 import io.github.hoooosi.imagehosting.manager.ImageManager;
 import io.github.hoooosi.imagehosting.mapper.ImageIndexMapper;
 import io.github.hoooosi.imagehosting.service.ImageService;
+import io.github.hoooosi.imagehosting.vo.CheckUploadInitVO;
 import io.github.hoooosi.imagehosting.vo.ImageVO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -39,14 +42,18 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Slf4j
 public class ImageServiceImpl extends ServiceImpl<ImageIndexMapper, ImageIndex> implements ImageService {
+    private static final int MAX_BYTES = 10 * 1024 * 1024;
+    private static final int EXPIRE_MINUTES = 10;
+
     private final MinioManager minioManager;
     private final ImageIndexMapper imageIndexMapper;
-    private final ImageManager uploadManager;
     private final IdentifierGenerator identifierGenerator;
     private final ImageItemBaseMapper imageItemBaseMapper;
     private final ImageFileBaseMapper imageFileBaseMapper;
     private final ImageManager imageManager;
     private final SpaceBaseMapper spaceBaseMapper;
+    private final SpaceManager spaceManager;
+    private final ImageItemUtils imageItemUtils;
 
     @Override
     public Page<ImageVO> pagePublic(PageReq req, QueryImageVOParams params) {
@@ -58,39 +65,54 @@ public class ImageServiceImpl extends ServiceImpl<ImageIndexMapper, ImageIndex> 
         return baseMapper.queryAll(PageUtils.of(req), params);
     }
 
-    @Override
     @Transactional
-    public void upload(MultipartFile multipartFile, Long spaceId) {
+    @Override
+    public CheckUploadInitVO upload(CheckUploadInitReq req, Long spaceId) {
+        ImageUtils.getFormatName(req.getContentType());
+        ThrowUtils.throwIf(req.getSize() <= 0 || req.getSize() > MAX_BYTES,
+                ErrorCode.UNSUPPORTED_MEDIA_TYPE, "File size must be between 1 byte and 10MB");
 
-        String contentType = multipartFile.getContentType();
-        ImageUtils.getFormatName(contentType);
         Long userId = SessionUtils.getUserId();
+        String md5 = req.getMd5();
 
-        // Add image index and image item into database
-        Long idxId = (Long) identifierGenerator.nextId(new ImageIndex());
-        Long itemId = (Long) identifierGenerator.nextId(new ImageItem());
+        ImageFile imageFile = imageFileBaseMapper.selectOne(Wrappers
+                .lambdaQuery(ImageFile.class)
+                .eq(ImageFile::getMd5, md5));
 
-        ImageIndex imageIndex = new ImageIndex()
-                .setSpaceId(spaceId)
-                .setUserId(userId)
-                .setFirstItemId(idxId)
-                .setName(multipartFile.getOriginalFilename());
+        CheckUploadInitVO result = new CheckUploadInitVO();
+
+        ImageIndex imageIndex = new ImageIndex();
+        ImageItem imageItem = new ImageItem();
+        Long idxId = (Long) identifierGenerator.nextId(imageIndex);
+        Long itemId = (Long) identifierGenerator.nextId(imageItem);
         imageIndex.setId(idxId);
-
-        ImageItem imageItem = new ImageItem()
-                .setSpaceId(spaceId)
-                .setIdxId(idxId)
-                .setContentType(contentType)
-                .setStatus(ImageItem.Status.PROCESSING);
         imageItem.setId(itemId);
-        imageIndex.setFirstItemId(imageItem.getId());
 
-        // Insert image entity into database
-        ThrowUtils.throwIfZero(baseMapper.insert(imageIndex), ErrorCode.DATA_SAVE_ERROR);
+        imageIndex.setSpaceId(spaceId)
+                .setUserId(userId)
+                .setName(req.getFilename())
+                .setFirstItemId(itemId);
+        imageItem
+                .setIdxId(imageIndex.getId())
+                .setSpaceId(spaceId)
+                .setMd5(req.getMd5());
+
+        if (imageFile == null) {
+            var form = minioManager.createPresignedPost(md5, req.getContentType(), req.getSize(), EXPIRE_MINUTES);
+            result.setUploaded(false)
+                    .setUrl(form.url())
+                    .setFormData(form.formData())
+                    .setExpireAt(form.expireAt());
+        } else {
+            imageItemUtils.union(imageItem, imageFile);
+            ThrowUtils.throwIfZero(spaceManager.adjustingUsedCapacity(imageItem.getSpaceId(), imageItem.getSize()), ErrorCode.INSUFFICIENT_CAPACITY);
+            result.setUploaded(true);
+        }
+
+        ThrowUtils.throwIfZero(imageIndexMapper.insert(imageIndex), ErrorCode.DATA_SAVE_ERROR);
         ThrowUtils.throwIfZero(imageItemBaseMapper.insert(imageItem), ErrorCode.DATA_SAVE_ERROR);
 
-        // Process image upload
-        uploadManager.uploadProcess(multipartFile, imageItem);
+        return result;
     }
 
     @Override
