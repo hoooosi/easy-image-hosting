@@ -8,14 +8,13 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class PageImgReq extends PageReq {
-    private String name;
-    private String introduction;
+    private String keyword;
     private List<String> tags;
 
     public QueryImageVOParams toQueryParams() {
         return new QueryImageVOParams()
-                .setName(name)
-                .setIntroduction(introduction)
+                .setKeyword(keyword)
+                .setAsc(isAsc())
                 .setTags(tags);
     }
 }

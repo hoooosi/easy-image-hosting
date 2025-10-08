@@ -45,4 +45,9 @@ public interface ImageService extends IService<ImageIndex> {
      * Generate temporary link
      */
     String generateTemporaryLink(Long id, boolean isThumbnail);
+
+    /**
+     * Get all distinct tags from images
+     */
+    List<String> getAllTags();
 }

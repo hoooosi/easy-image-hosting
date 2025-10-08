@@ -50,16 +50,20 @@
         <if test="params != null and params.spaceId != null">
             AND idx.space_id = #{params.spaceId}
         </if>
-        <if test="params != null and params.name != null and params.name != ''">
-            AND idx.name ILIKE CONCAT('%', #{params.name}, '%')
-        </if>
-        <if test="params != null and params.introduction != null and params.introduction != ''">
-            AND idx.introduction ILIKE CONCAT('%', #{params.introduction}, '%')
+        <if test="params != null and params.keyword != null and params.keyword != ''">
+            AND (idx.introduction ILIKE CONCAT('%', #{params).keyword}, '%')
+            OR idx.name ILIKE CONCAT('%', #{params).keyword}, '%'))
         </if>
         <if test="params != null and params.tags != null and params.tags.size() > 0">
             <foreach collection="params.tags" item="tag" open="AND (" separator=" OR " close=")">
                 idx.tags @> jsonb_build_array(#{tag})
             </foreach>
+        </if>
+
+        ORDER BY idx.id
+        <if test="params != null">
+            <if test="params.asc">ASC</if>
+            <if test="!params.asc">DESC</if>
         </if>
     </sql>
 
@@ -93,12 +97,6 @@
         <where>
             true
             <include refid="filterImageVO"/>
-            <if test="req != null and req.userId != null">
-                AND idx.user_id = #{req.userId}
-            </if>
-            <if test="req != null and req.spaceId != null">
-                AND idx.space_id = #{req.spaceId}
-            </if>
         </where>
     </select>
 
@@ -107,10 +105,9 @@
         FROM tb_image_index AS idx
         LEFT JOIN tb_space AS s ON idx.space_id = s.id
         LEFT JOIN tb_member AS m ON idx.space_id = m.space_id AND m.user_id = #{userId}
-        WHERE
-        idx.id IN
+        WHERE idx.id IN
         <foreach item="id" collection="ids" open="(" separator="," close=")">#{id}</foreach>
-        AND ( idx.user_id = #{userId} OR ((m.permission_mask &amp; 16777216) = 16777216 )
+        AND ( idx.user_id = #{userId} OR ((m.permission_mask &amp; 16777216) = 16777216 ))
     </select>
 
     <select id="deleteAndSumSize" resultType="long">
@@ -135,5 +132,13 @@
         WHERE i.id = (SELECT first_item_id
                       FROM "tb_image_index"
                       WHERE id = #{idxId})
+    </select>
+
+    <select id="getAllTags" resultType="java.lang.String">
+        SELECT DISTINCT jsonb_array_elements_text(tags) AS tag
+        FROM tb_image_index
+        WHERE tags IS NOT NULL
+          AND jsonb_array_length(tags) > 0
+        ORDER BY tag
     </select>
 </mapper>

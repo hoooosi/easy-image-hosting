@@ -16,6 +16,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/image")
 @Slf4j
@@ -34,11 +36,11 @@ public class ImageQueryController {
                 .setUserId(userId)));
     }
 
-    @GetMapping("/page/s/{spaceId}")
+    @GetMapping("/page/s")
     @AuthPermission(mask = Permission.IMAGE_VIEW, id = ID.spaceId)
     @Operation(summary = "QUERY IMAGES BY SPACE")
     public BaseRes<Page<ImageVO>> pageBySpace(PageImgReq req,
-                                              @PathVariable @NotNull Long spaceId,
+                                              Long spaceId,
                                               @RequestParam(required = false) Long userId) {
         return BaseRes.success(imageService.pageAll(req, req.toQueryParams()
                 .setSpaceId(spaceId)
@@ -54,4 +56,9 @@ public class ImageQueryController {
                 .setSpaceId(spaceId)));
     }
 
+    @GetMapping("/tags")
+    @Operation(summary = "LIST ALL IMAGE TAGS")
+    public BaseRes<List<String>> listTags() {
+        return BaseRes.success(imageService.getAllTags());
+    }
 }

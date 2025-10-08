@@ -19,6 +19,4 @@ public interface ApplicationMapper extends ApplicationBaseMapper {
 
     List<ApplicationVO> query(@Param(Constants.WRAPPER) LambdaQueryWrapper<ApplicationVO> wrapper);
 
-    Page<ApplicationVO> query(Page<ApplicationVO> page,
-                              @Param(Constants.WRAPPER) LambdaQueryWrapper<ApplicationVO> wrapper);
 }

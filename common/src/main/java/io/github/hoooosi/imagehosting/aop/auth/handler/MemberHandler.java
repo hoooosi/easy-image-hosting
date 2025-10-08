@@ -30,7 +30,7 @@ public class MemberHandler extends AbstractHandler {
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.MASK_MEMBER, key = "#mid+':'+T(io.github.hoooosi.imagehosting.utils.SessionUtils).userId()")
+    @Cacheable(cacheNames = CacheNames.MASK_MEMBER, key = "#mid+':'+T(io.github.hoooosi.imagehosting.utils.SessionUtils).getUserId()")
     public Long handlePermission(Long memberId) {
         // Check if the entity exists
         Member entity = memberBaseMapper.selectById(memberId);

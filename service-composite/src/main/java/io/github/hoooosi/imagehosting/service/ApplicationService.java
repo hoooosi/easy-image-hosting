@@ -7,11 +7,13 @@ import io.github.hoooosi.imagehosting.dto.PageReq;
 import io.github.hoooosi.imagehosting.entity.Application;
 import io.github.hoooosi.imagehosting.vo.ApplicationVO;
 
+import java.util.List;
+
 public interface ApplicationService extends IService<Application> {
     /**
      * Query application
      */
-    Page<ApplicationVO> page(PageReq req, LambdaQueryWrapper<ApplicationVO> wrapper);
+    List<ApplicationVO> list(LambdaQueryWrapper<ApplicationVO> wrapper);
 
     /**
      * Apply to join space

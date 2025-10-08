@@ -7,5 +7,6 @@ public class CacheNames {
     public static final String MASK_APPLICATION = "mask-application";
     public static final String MASK_MEMBER = "mask-member";
 
+
     public static final String IMG_ITEM_URL = "img-item-url";
 }

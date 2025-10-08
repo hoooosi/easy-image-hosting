@@ -2,23 +2,22 @@ package io.github.hoooosi.imagehosting.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.hoooosi.imagehosting.constant.Permission;
-import io.github.hoooosi.imagehosting.dto.PageReq;
 import io.github.hoooosi.imagehosting.entity.Application;
 import io.github.hoooosi.imagehosting.entity.Member;
 import io.github.hoooosi.imagehosting.entity.Space;
 import io.github.hoooosi.imagehosting.exception.ErrorCode;
 import io.github.hoooosi.imagehosting.mapper.*;
 import io.github.hoooosi.imagehosting.service.ApplicationService;
-import io.github.hoooosi.imagehosting.utils.PageUtils;
 import io.github.hoooosi.imagehosting.utils.SessionUtils;
 import io.github.hoooosi.imagehosting.utils.ThrowUtils;
 import io.github.hoooosi.imagehosting.vo.ApplicationVO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @Slf4j
@@ -29,9 +28,8 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     private final MemberMapper memberMapper;
 
     @Override
-    public Page<ApplicationVO> page(PageReq req, LambdaQueryWrapper<ApplicationVO> wrapper) {
-        return baseMapper.query(PageUtils.of(req), wrapper
-                .orderBy(true, req.isAsc(), ApplicationVO::getId));
+    public List<ApplicationVO> list(LambdaQueryWrapper<ApplicationVO> wrapper) {
+        return baseMapper.query(wrapper);
     }
 
     @Override
@@ -39,7 +37,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         Long userId = SessionUtils.getUserIdOrThrow();
 
         // Check user exist in space
-        ThrowUtils.throwIf(checkUserExistInSpace(spaceId, userId), ErrorCode.APPLICATION_EXISTS);
+        ThrowUtils.throwIf(checkUserExistInSpace(spaceId, userId), ErrorCode.ALREADY_IN_SPACE);
 
         // Get space
         Space space = spaceMapper.selectById(spaceId);

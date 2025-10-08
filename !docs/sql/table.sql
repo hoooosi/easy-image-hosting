@@ -96,9 +96,9 @@ CREATE TABLE "tb_application"
     space_id    BIGINT      NOT NULL,
     status      VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
     handle_type VARCHAR(20) CHECK (handle_type IN ('AUTO', 'MANUAL')),
-    create_time TIMESTAMP,
-    update_time TIMESTAMP,
-    handle_time TIMESTAMP,
+    create_time BIGINT,
+    update_time BIGINT,
+    handle_time BIGINT,
     FOREIGN KEY (user_id) REFERENCES tb_user (id) ON DELETE CASCADE,
     FOREIGN KEY (space_id) REFERENCES tb_space (id) ON DELETE CASCADE
 );

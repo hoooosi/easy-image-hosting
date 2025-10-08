@@ -17,6 +17,7 @@ public enum ErrorCode {
     APPLICATION_EXISTS(400003, "Application already exists"),
     ILLEGAL_OPERATION(40004, "Illegal operation"),
     UNABLE_TO_OPERATE_MYSELF(40005, "Unable to operate myself"),
+    ALREADY_IN_SPACE(40006, "Already in space"),
     NOT_FOUND(40400, "Not Found"),
     FORBIDDEN(40300, "Forbidden"),
 

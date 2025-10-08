@@ -2,6 +2,8 @@ server:
   port: 15020
 #=======================================================================================================================
 spring:
+  profiles:
+    active: test
   application:
     name: image-service
   cloud:
@@ -27,6 +29,7 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
+  type-handlers-package: io.github.hoooosi.imagehosting.type.handler
 #=======================================================================================================================
 springdoc:
   api-docs:

@@ -47,11 +47,8 @@ class ImageQueryControllerTest {
     }
 
     void pageImagePublic() throws Exception {
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("/image/page")
-                        .param("current", "1")
-                        .param("size", "10")
-                        .param("asc", "true")
-                )
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("/ai/describe")
+                        .param("idxId", "1975502633886937090"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andReturn();

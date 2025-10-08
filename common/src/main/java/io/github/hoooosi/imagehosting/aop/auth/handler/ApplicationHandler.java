@@ -30,7 +30,7 @@ public class ApplicationHandler extends AbstractHandler {
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.MASK_APPLICATION, key = "#applicationId+':'+T(io.github.hoooosi.imagehosting.utils.SessionUtils).userId()")
+    @Cacheable(cacheNames = CacheNames.MASK_APPLICATION, key = "#applicationId+':'+T(io.github.hoooosi.imagehosting.utils.SessionUtils).getUserId()")
     public Long handlePermission(Long applicationId) {
         // Check if the entity exists
         Application entity = applicationBaseMapper.selectById(applicationId);

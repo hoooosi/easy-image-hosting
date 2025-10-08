@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.github.hoooosi.imagehosting.common.ConvertMessage;
+import io.github.hoooosi.imagehosting.constant.TopicNames;
 import io.github.hoooosi.imagehosting.utils.ImageItemUtils;
 import io.github.hoooosi.imagehosting.constant.CacheNames;
 import io.github.hoooosi.imagehosting.dto.CheckUploadInitReq;
@@ -12,7 +14,6 @@ import io.github.hoooosi.imagehosting.dto.QueryImageVOParams;
 import io.github.hoooosi.imagehosting.entity.ImageFile;
 import io.github.hoooosi.imagehosting.entity.ImageIndex;
 import io.github.hoooosi.imagehosting.entity.ImageItem;
-import io.github.hoooosi.imagehosting.entity.Space;
 import io.github.hoooosi.imagehosting.exception.ErrorCode;
 import io.github.hoooosi.imagehosting.manager.SpaceManager;
 import io.github.hoooosi.imagehosting.mapper.ImageFileBaseMapper;
@@ -30,6 +31,7 @@ import io.github.hoooosi.imagehosting.vo.CheckUploadInitVO;
 import io.github.hoooosi.imagehosting.vo.ImageVO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +56,7 @@ public class ImageServiceImpl extends ServiceImpl<ImageIndexMapper, ImageIndex> 
     private final SpaceBaseMapper spaceBaseMapper;
     private final SpaceManager spaceManager;
     private final ImageItemUtils imageItemUtils;
+    private final RocketMQTemplate rocketMQTemplate;
 
     @Override
     public Page<ImageVO> pagePublic(PageReq req, QueryImageVOParams params) {
@@ -142,6 +145,11 @@ public class ImageServiceImpl extends ServiceImpl<ImageIndexMapper, ImageIndex> 
         imageItem.setId(itemId);
         ThrowUtils.throwIfZero(imageItemBaseMapper.insert(imageItem), ErrorCode.DATA_SAVE_ERROR);
 
+        rocketMQTemplate.convertAndSend(TopicNames.FORMAT_CONVERT_TOPIC, new ConvertMessage()
+                .setObjectKey(imageItem.getMd5())
+                .setContentType(contentType)
+                .setItemId(imageItem.getId()));
+
         imageManager.convertProcess(imageItem, imageFile.getMd5());
     }
 
@@ -150,11 +158,9 @@ public class ImageServiceImpl extends ServiceImpl<ImageIndexMapper, ImageIndex> 
     @Transactional
     public void delete(Long idxId) {
         ImageIndex imageIndex = imageIndexMapper.selectById(idxId);
-        long sumSize = imageIndexMapper.deleteAndSumSize(List.of(idxId));
-        int flag = spaceBaseMapper.update(Wrappers.lambdaUpdate(Space.class)
-                .setSql("total_size = total_size - {0}", sumSize)
-                .eq(Space::getId, imageIndex.getSpaceId()));
-        ThrowUtils.throwIfZero(flag, ErrorCode.DATA_SAVE_ERROR);
+        long size = imageIndexMapper.deleteAndSumSize(List.of(idxId));
+
+        ThrowUtils.throwIfZero(spaceManager.adjustingUsedCapacity(imageIndex.getSpaceId(), -size), ErrorCode.DATA_SAVE_ERROR);
     }
 
     @Transactional
@@ -163,11 +169,11 @@ public class ImageServiceImpl extends ServiceImpl<ImageIndexMapper, ImageIndex> 
         Long userId = SessionUtils.getUserIdOrThrow();
         List<Long> allowImgIds = imageIndexMapper.getAllowImgIds(ids, userId);
 
-        List<ImageIndex> imageIndexList = imageIndexMapper.selectList(Wrappers.lambdaQuery(ImageIndex.class)
+        List<ImageIndex> imageIndices = imageIndexMapper.selectList(Wrappers.lambdaQuery(ImageIndex.class)
                 .select(ImageIndex::getId, ImageIndex::getSpaceId)
                 .in(ImageIndex::getId, allowImgIds));
 
-        Map<Long, List<Long>> spaceIdToIndexIdsMap = imageIndexList.stream()
+        Map<Long, List<Long>> spaceIdToIndexIdsMap = imageIndices.stream()
                 .collect(Collectors.groupingBy(
                         ImageIndex::getSpaceId,
                         Collectors.mapping(
@@ -175,15 +181,10 @@ public class ImageServiceImpl extends ServiceImpl<ImageIndexMapper, ImageIndex> 
                                 Collectors.toList()
                         )));
 
-
         spaceIdToIndexIdsMap.forEach((spaceId, indexIds) -> {
-            long sumSize = imageIndexMapper.deleteAndSumSize(indexIds);
-            if (sumSize != 0) {
-                int flag = spaceBaseMapper.update(Wrappers.lambdaUpdate(Space.class)
-                        .setSql("total_size = total_size - {0}", sumSize)
-                        .eq(Space::getId, spaceId));
-                ThrowUtils.throwIfZero(flag, ErrorCode.DATA_SAVE_ERROR);
-            }
+            long size = imageIndexMapper.deleteAndSumSize(indexIds);
+            if (size != 0)
+                ThrowUtils.throwIfZero(spaceManager.adjustingUsedCapacity(spaceId, -size), ErrorCode.DATA_SAVE_ERROR);
         });
     }
 
@@ -198,5 +199,10 @@ public class ImageServiceImpl extends ServiceImpl<ImageIndexMapper, ImageIndex> 
 
         String objectName = isThumbnail ? "thumbnail/" + imageFile.getMd5() : imageFile.getMd5();
         return minioManager.generateTemporaryLink(objectName);
+    }
+
+    @Override
+    public List<String> getAllTags() {
+        return imageIndexMapper.getAllTags();
     }
 }

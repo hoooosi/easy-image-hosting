@@ -1,22 +1,17 @@
 package io.github.hoooosi.imagehosting.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.hoooosi.imagehosting.constant.CacheNames;
 import io.github.hoooosi.imagehosting.entity.Member;
 import io.github.hoooosi.imagehosting.entity.Space;
 import io.github.hoooosi.imagehosting.exception.ErrorCode;
 import io.github.hoooosi.imagehosting.mapper.MemberBaseMapper;
-import io.github.hoooosi.imagehosting.utils.PageUtils;
 import io.github.hoooosi.imagehosting.utils.SessionUtils;
 import io.github.hoooosi.imagehosting.dto.AddSpaceReq;
 import io.github.hoooosi.imagehosting.dto.EditSpaceReq;
-import io.github.hoooosi.imagehosting.dto.QuerySpaceReq;
 import io.github.hoooosi.imagehosting.mapper.SpaceMapper;
 import io.github.hoooosi.imagehosting.service.SpaceService;
 import io.github.hoooosi.imagehosting.utils.ThrowUtils;
-import io.github.hoooosi.imagehosting.vo.SpaceVO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -29,19 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements SpaceService {
     private final MemberBaseMapper memberBaseMapper;
     private final RocketMQTemplate rocketMQTemplate;
-
-    @Override
-    public Page<SpaceVO> page(QuerySpaceReq req, LambdaQueryWrapper<SpaceVO> wrapper) {
-        return baseMapper.query(PageUtils.of(req), wrapper
-                .like(req.getName() != null, Space::getName, req.getName())
-                .apply(req.getMask() != null, "(public_permission_mask & {0}) = {1}", req.getMask(), req.getMask())
-                .orderBy(true, req.isAsc(), Space::getId), SessionUtils.getUserId());
-    }
-
-    @Override
-    public SpaceVO get(Long sid) {
-        return baseMapper.query(sid, SessionUtils.getUserId());
-    }
 
     @Override
     public void create(AddSpaceReq req) {

@@ -64,7 +64,7 @@ public class ImageOptController {
     @Operation(summary = "CONVERT IMAGE FORMAT")
     @AuthPermission(mask = Permission.IMAGE_EDIT, id = ID.idxId)
     public BaseRes<Void> convert(Long idxId, String contentType) {
-        ThrowUtils.throwIfNull(ImageUtils.getFormatName(contentType), ErrorCode.NOT_FOUND);
+        ImageUtils.getFormatName(contentType);
         imageService.convert(idxId, contentType);
         return BaseRes.success();
     }

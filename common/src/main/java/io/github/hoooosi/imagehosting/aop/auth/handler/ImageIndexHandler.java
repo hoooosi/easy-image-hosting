@@ -32,7 +32,7 @@ public class ImageIndexHandler extends AbstractHandler {
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.MASK_IMAGE_IDX, key = "#idxId+':'+T(io.github.hoooosi.imagehosting.utils.SessionUtils).userId()")
+    @Cacheable(cacheNames = CacheNames.MASK_IMAGE_IDX, key = "#idxId+':'+T(io.github.hoooosi.imagehosting.utils.SessionUtils).getUserId()")
     public Long handlePermission(Long idxId) {
         // Check if the entity exists
         ImageIndex entity = imageIndexBaseMapper.selectOne(

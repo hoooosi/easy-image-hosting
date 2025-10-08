@@ -1,6 +1,7 @@
 package io.github.hoooosi.imagehosting.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import io.github.hoooosi.imagehosting.type.handler.JsonbTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -17,5 +18,6 @@ public class ImageIndex extends BaseEntity {
     private Long userId;
     private String name;
     private String introduction;
+    @TableField(typeHandler = JsonbTypeHandler.class)
     private List<String> tags;
 }

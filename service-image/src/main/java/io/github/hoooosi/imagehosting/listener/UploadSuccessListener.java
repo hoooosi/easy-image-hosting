@@ -37,10 +37,8 @@ public class UploadSuccessListener implements RocketMQListener<String> {
     private final ImageFileBaseMapper imageFileBaseMapper;
     private final MinioManager minioManager;
     private final TransactionTemplate transactionTemplate;
-    private final SpaceBaseMapper spaceBaseMapper;
     private final ImageItemBaseMapper imageItemBaseMapper;
     private final ImageItemUtils imageItemUtils;
-    private final ImageManager imageManager;
     private final SpaceManager spaceManager;
 
     @Override

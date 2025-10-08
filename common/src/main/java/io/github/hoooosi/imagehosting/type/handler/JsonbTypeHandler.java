@@ -13,6 +13,10 @@ import java.util.List;
 @MappedTypes({List.class, ArrayList.class})
 public class JsonbTypeHandler extends JacksonTypeHandler {
 
+    public JsonbTypeHandler() {
+        super(List.class);
+    }
+
     public JsonbTypeHandler(Class<?> type) {
         super(type);
     }

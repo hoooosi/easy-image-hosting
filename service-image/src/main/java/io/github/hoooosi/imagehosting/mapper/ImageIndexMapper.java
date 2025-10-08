@@ -20,4 +20,6 @@ public interface ImageIndexMapper extends ImageIndexBaseMapper {
     ImageFile getFirstFileByIdxId(Long idxId);
 
     long deleteAndSumSize(List<Long> ids);
+
+    List<String> getAllTags();
 }
